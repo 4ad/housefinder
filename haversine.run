@@ -1,0 +1,50 @@
+#!/bin/sh
+
+# srcdir is the directory where this script resides
+srcdir="$(cd `dirname "$0"` && pwd)"
+progname="`basename "$0"`"
+. ${srcdir}/env.sh
+
+cd $resultdir
+$cc -o haversine ${srcdir}/haversine.c >/dev/tty 2>&1
+
+# We create two files to drive the loop. One contains all houses
+# that have geoinfo, the other contains only the ones that have
+# geoinfo AND are provisionfrei. We only need pairs with at least
+# one provisionfrei house and we better filter here then later.
+# The loop is very expensive
+
+echo "${progname}: finding indexes that drive the loop..." > /dev/tty
+
+for file in `ls *.geoinfo`
+do
+	index=`echo $file | $awk ' BEGIN { FS="." } { print $1 } '`
+	echo $index
+done | sort -n > all.geo
+for file in `ls *.provision`
+do
+	index=`echo $file | $awk ' BEGIN { FS="." } { print $1 } '`
+	[ -f ${index}.geoinfo ] && echo $index
+done | sort -n > provision.geo
+
+echo "${progname}: loop indexes saved." > /dev/tty
+
+rm index.geodata >/dev/null 2>&1
+for i in `cat all.geo`
+do
+	printf "\r${progname}: loop at index ${i}." > /dev/tty
+
+	for j in `cat provision.geo`
+	do
+		if [ $j -gt $i ]
+		then		
+			echo $i $j `cat $i.geoinfo` `cat $j.geoinfo` >> index.geodata
+		fi
+	done
+done
+echo > /dev/tty
+echo "${progname}: loop finished, geodata generated." > /dev/tty
+
+echo "${progname}: sorting by distance..." > /dev/tty
+./haversine < index.geodata | sort -n -k 3 > index.haversine
+echo "${progname}: sorting done." > /dev/tty

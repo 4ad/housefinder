@@ -1,0 +1,18 @@
+#!/bin/sh
+
+# srcdir is the directory where this script resides
+srcdir="$(cd `dirname "$0"` && pwd)"
+progname="`basename "$0"`"
+. ${srcdir}/env.sh
+
+cd ${resultdir}
+printf "${progname}: splitting urls... " > /dev/tty
+$awk -f "${srcdir}/spliturls.awk"
+echo 'done.' > /dev/tty
+
+printf "${progname}: deleting broken url files... " > /dev/tty
+# Remove empty *.url files
+du *.url 2>/dev/null | ${awk} ' $1==0 ' | ${xargs} rm 1 > /dev/null 2>&1
+# Remove *.url files that don't have a site
+rm .*.url  > /dev/null 2>&1
+echo 'done.' > /dev/tty

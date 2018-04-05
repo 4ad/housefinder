@@ -1,0 +1,14 @@
+#!/bin/sh
+
+# generates the compilated results
+
+# srcdir is the directory where this script resides
+srcdir="$(cd `dirname "$0"` && pwd)"
+progname="`basename "$0"`"
+. ${srcdir}/env.sh
+
+cd $resultdir
+
+echo "${progname}: compiling results..." > /dev/tty
+$awk -f ${srcdir}/compileresults.awk index.haversine > results.raw
+echo "${progname}: results compiled." > /dev/tty

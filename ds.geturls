@@ -1,0 +1,46 @@
+#!/bin/sh
+
+# srcdir is the directory where this script resides
+srcdir="$(cd `dirname "$0"` && pwd)"
+progname="`basename "$0"`"
+. ${srcdir}/env.sh
+
+printf "${progname}: starting to extract URLs...\n" > /dev/tty
+$awk '
+	# before this mark, there are some adds
+	/class="topangebot spacer"/ {
+		notadds=1
+		parsing=0
+	}
+
+	# items are between these markers
+	/<td class="TitleTD" rowspan="2">/ {
+		parsing=1
+	}
+	
+	# Select only the lines containing the URL
+	/<a href=/ && parsing && notadds {
+		print
+		# urls are duplicated so we stop after the 1st one
+		parsing=0
+	}
+' |
+# Select only the URL and remove trailing chars
+$sed -e 's/.*<a href="//g' -e 's/">.*$//' |
+# Sometimes sed can't handle stupid non-UTF-8 encodings
+# so the above line doesn't remove all trailing chars
+# so we fix that here
+$awk '
+	# URL ends in FS
+	BEGIN {
+		FS="\"" 
+	}
+	
+	# we care only for the part before the first FS character
+	{
+		print $1
+	}
+' |
+# urls are relative, so we construct URIs here
+$sed -e 's|^|ds http://derstandard.at/anzeiger/immoweb/|'
+printf "${progname}: URL extraction done.\n" > /dev/tty

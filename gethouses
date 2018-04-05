@@ -1,0 +1,31 @@
+#!/bin/sh
+
+# gets all houses from all urls
+
+# srcdir is the directory where this script resides
+srcdir="$(cd `dirname "$0"` && pwd)"
+progname="`basename "$0"`"
+. ${srcdir}/env.sh
+
+cd $resultdir
+
+echo "${progname}: `ls *.url | wc -l ` urls found." > /dev/tty
+c=0
+for file in `echo *.url`
+do
+	site=`echo $file | $awk ' BEGIN { FS="." } { print $2 } '`
+	prefix=`echo $file | sed -e 's/\.url$//'`
+	index=`echo $file | $awk ' BEGIN { FS="." } { print $1 } '`
+	
+	printf "\r${progname}: GETting url ${index}." > /dev/tty
+	
+	# get the file only if it doesn't already exist
+	if [ ! -f $prefix.htm ]
+	then
+		$httpget "`cat $file`" > $prefix.htm 2>/dev/null
+		c=$((c+1))
+	fi
+done
+du *.htm > /dev/null 2>&1 | $awk ' $1 == 0 { print $2 } ' | xargs rm > /dev/null 2>1
+echo > /dev/tty
+echo "${progname}: `ls *.htm | wc -l` valid houses found." > /dev/tty

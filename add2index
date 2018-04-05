@@ -1,0 +1,31 @@
+#!/bin/sh
+
+# adds new entries to the index file
+
+# srcdir is the directory where this script resides
+srcdir="$(cd `dirname "$0"` && pwd)"
+progname="`basename "$0"`"
+. ${srcdir}/env.sh
+
+printf "${progname}: adding new entries to index...\n" > /dev/tty
+cp ${resultdir}/index ${resultdir}/index.raw
+c=0
+while read line
+do
+	# search if the URL is already present in the index
+	$fgrep "`echo $line | $awk ' { print $2 } '`" ${resultdir}/index > /dev/null
+	# if not, add it at the end
+	[ "$?" -eq '1' ] && echo $line >> ${resultdir}/index.raw && c=$((c+1))
+done
+printf "${progname}: $c entries added.\n" > /dev/tty
+
+printf "${progname}: creating new indexes...\n" > /dev/tty
+$awk '
+	# if lines lack the URL or they have all fields no processing
+	# is required
+	NF==1 || NF==3 { print }
+	# if we lack an index number add it based on position in file
+	NF==2 { print NR, $0 }
+' ${resultdir}/index.raw
+printf "${progname}: index creation done.\n" > /dev/tty
+rm ${resultdir}/index.raw

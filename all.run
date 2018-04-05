@@ -1,0 +1,29 @@
+#!/bin/sh
+
+# Runs all scripts
+
+# srcdir is the directory where this script resides
+srcdir="$(cd `dirname "$0"` && pwd)"
+progname="`basename "$0"`"
+. ${srcdir}/env.sh
+
+cd $resultdir
+# somehow create the HTMLs with results
+for script in `echo ${srcdir}/*.query`
+do
+	prefix=`basename $script | $awk ' BEGIN { FS="." } { print $1 } '`
+	$script
+done
+
+${srcdir}/index.run
+
+${srcdir}/gethouses
+echo "${progname}: `ls *.htm | wc -l ` houses found." > /dev/tty
+
+${srcdir}/addr.run
+${srcdir}/price.run
+${srcdir}/provision.run
+${srcdir}/geoinfo.run
+${srcdir}/haversine.run
+${srcdir}/compileresults.run
+${srcdir}/prepareresults.run

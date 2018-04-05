@@ -1,0 +1,19 @@
+#!/bin/sh
+
+# srcdir is the directory where this script resides
+srcdir="$(cd `dirname "$0"` && pwd)"
+progname="`basename "$0"`"
+. ${srcdir}/env.sh
+
+cd $resultdir
+
+for script in `echo ${srcdir}/*.geturls`
+do
+	prefix=`basename $script | $awk ' BEGIN { FS="." } { print $1 } '`
+	cat ${prefix}*html 2>/dev/null | $script > ${prefix}.urls
+done
+
+cat *urls | ${srcdir}/add2index | ${srcdir}/rmstale > ${resultdir}/index.new
+mv index.new index
+
+${srcdir}/spliturls < index

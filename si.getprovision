@@ -1,0 +1,10 @@
+#!/bin/sh
+
+# srcdir is the directory where this script resides
+srcdir="$(cd `dirname "$0"` && pwd)"
+progname="`basename "$0"`"
+. ${srcdir}/env.sh
+
+cd $resultdir
+
+echo 'provisionsfrei'

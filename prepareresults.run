@@ -1,0 +1,54 @@
+#!/bin/sh
+
+# prepares the results for easier reading
+
+# srcdir is the directory where this script resides
+srcdir="$(cd `dirname "$0"` && pwd)"
+progname="`basename "$0"`"
+. ${srcdir}/env.sh
+
+cd $resultdir
+
+echo "${progname}: generating easily readable format for all houses..." > /dev/tty
+$awk '
+	BEGIN {
+		RS=""
+		FS="\n"
+	}
+
+	$4 <= 750 || $8 <= 750 {
+		print "distance: " $1
+		print $2
+		print "index1: \"" $3 "\""
+		print "price1: " $4
+		print "provision: " $5
+		print $6
+		print "index2: \"" $7 "\""
+		print "price2: " $8
+		print "provision2: " $9
+		print ""
+	}
+' results.raw > results.all.txt
+
+echo "${progname}: generating easily readable format for provisionsfrei houses..." > /dev/tty
+$awk '
+	BEGIN {
+		RS=""
+		FS="\n"
+	}
+
+	$5 ~ /provisionsfrei/ && ($4 <= 750 || $8 <= 750) {
+		print "distance: " $1
+		print $2
+		print "index1: \"" $3 "\""
+		print "price1: " $4
+		print "provision: " $5
+		print $6
+		print "index2: \"" $7 "\""
+		print "price2: " $8
+		print "provision2: " $9
+		print ""
+	}
+' results.raw > results.pf.txt
+
+echo "${progname}: done." > /dev/tty

@@ -1,0 +1,26 @@
+#!/bin/sh
+
+# srcdir is the directory where this script resides
+srcdir="$(cd `dirname "$0"` && pwd)"
+progname="`basename "$0"`"
+. ${srcdir}/env.sh
+
+cd $resultdir
+
+c=0
+for file in `echo *.htm`
+do
+	index=`echo $file | $awk ' BEGIN { FS="." } { print $1 } '`
+	site=`echo $file | $awk ' BEGIN { FS="." } { print $2 } '`
+
+	printf "\r${progname}: extracting address ${index}." > /dev/tty
+
+	if [ ! -f $index.$site.addr ]
+	then
+		${srcdir}/${site}.getaddr < $file > $index.$site.addr
+		c=$((c+1))
+	fi
+done
+du *.addr | awk ' $1 == 0 { print $2 } ' | $xargs rm
+echo > /dev/tty
+echo "${progname}: `ls *.addr | wc -l` valid addresses." > /dev/tty

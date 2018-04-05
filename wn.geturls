@@ -1,0 +1,40 @@
+#!/bin/sh
+
+# srcdir is the directory where this script resides
+srcdir="$(cd `dirname "$0"` && pwd)"
+progname="`basename "$0"`"
+. ${srcdir}/env.sh
+
+printf "${progname}: starting to extract URLs...\n" > /dev/tty
+$awk '
+	# Items are between ERGEBNISZEILE markers
+	/<!-- start ERGEBNISZEILE -->/ {
+		parsing=1
+	}
+	
+	/<!-- end ERGEBNISZEILE -->/ {
+		parsing=0
+	}
+	
+	# Select only the lines containing the URL
+	/<a href=/ && parsing {
+		print
+	}
+' |
+# Select only the URL and remove trailing chars
+$sed -e 's/.*<a href="\(.*\)"/\1/g'  -e 's/".*$//g' |
+# Sometimes sed can't handle stupid non-UTF-8 encodings
+# so the above line doesn't remove all trailing chars
+# so we fix that here
+$awk '
+	# URL ends in FS
+	BEGIN {
+		FS="\"" 
+	}
+	
+	# we care only for the part before the first FS character
+	{
+		print $1
+	}
+' | $sed -e 's/^/wn /'
+printf "${progname}: URL extraction done.\n" > /dev/tty

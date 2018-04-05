@@ -1,0 +1,19 @@
+#!/bin/sh
+
+# srcdir is the directory where this script resides
+srcdir="$(cd `dirname "$0"` && pwd)"
+progname="`basename "$0"`"
+. ${srcdir}/env.sh
+
+cd $resultdir
+
+$awk '
+	/<b>Adresse:<\/b>/ {
+		parsing=NR+2
+	}
+	
+	NR==parsing && length($0) {
+		print
+		parsing=0
+	}
+' | $sed -e 's/$/, Wien, Österreich/g'

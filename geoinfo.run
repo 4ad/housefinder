@@ -1,0 +1,28 @@
+#!/bin/sh
+
+# srcdir is the directory where this script resides
+srcdir="$(cd `dirname "$0"` && pwd)"
+progname="`basename "$0"`"
+. ${srcdir}/env.sh
+
+cd $resultdir
+
+c=0
+for file in `echo *.addr`
+do
+	index=`echo $file | $awk ' BEGIN { FS="." } { print $1 } '`
+	site=`echo $file | $awk ' BEGIN { FS="." } { print $2 } '`
+
+	printf "\r${progname}: extracting geoinfo ${index}." > /dev/tty
+
+	if [ ! -f $index.geoinfo ]
+	then
+		cat $file | ${srcdir}/getgeoinfo > $index.geoinfo
+		sleep 1	# google throttle
+		c=$((c+1))
+	fi
+done
+du *.geoinfo | awk ' $1 == 0 { print $2 } ' | $xargs rm
+echo > /dev/tty
+echo "${progname}: `ls *.geoinfo | wc -l` have coordinates." > /dev/tty
+

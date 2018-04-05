@@ -1,0 +1,38 @@
+#!/bin/sh
+
+# removes stall entries from the index file and
+# corresponding stall files
+
+# srcdir is the directory where this script resides
+srcdir="$(cd `dirname "$0"` && pwd)"
+progname="`basename "$0"`"
+. ${srcdir}/env.sh
+
+cd ${resultdir}
+printf "${progname}: removing stale files...\n" > /dev/tty
+$awk -v fgrep="$fgrep" '
+	# empty lines need no checking
+	NF==1 || NF==2 { 
+		print $1
+		# stale files are prefixed by index
+		system("rm "$1".* 2> /dev/null")		
+	}
+	# check if the URL is stall by veryfing it exists in *.urls files
+	NF==3 {
+		# crazy quoting to contruct single quote char in command
+		command=fgrep " '"'"'" $3 "'"'"'" " "$2 "*.urls > /dev/null 2>&1"
+		ret=system(command)
+		# if the command returns 0, we found the URL so we
+		# print the whole line, otherwise the URL is stale and we
+		# print only the index to preserve index uniqueness
+		# and order
+		if (ret==0)
+			print
+		else {
+			print $1
+			# stale files are prefixed by index
+			system("rm "$1".* 2> /dev/null")
+		}
+	}
+'
+printf "${progname}: stale files removed.\n" > /dev/tty

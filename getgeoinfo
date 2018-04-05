@@ -1,0 +1,21 @@
+#!/bin/sh
+
+# srcdir is the directory where this script resides
+srcdir="$(cd `dirname "$0"` && pwd)"
+progname="`basename "$0"`"
+. ${srcdir}/env.sh
+
+encaddr=`${srcdir}/urlencode`
+getrq='http://maps.googleapis.com/maps/api/geocode/json?address='"${encaddr}"'&sensor=false'
+$httpget $getrq  2>/dev/null |
+$awk '
+	BEGIN { parse=1 }
+	
+	/"lat"/ && parse {
+		printf("%s\t", $3)
+	}
+	/"lng"/ && parse {
+		printf("%s\t", $3)
+		parse=0
+	}
+' | $sed -e 's/,//'

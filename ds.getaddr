@@ -1,0 +1,12 @@
+#!/bin/sh
+
+# srcdir is the directory where this script resides
+srcdir="$(cd `dirname "$0"` && pwd)"
+progname="`basename "$0"`"
+. ${srcdir}/env.sh
+
+cd $resultdir
+
+$grep 'Adresse:' | 
+$sed -e 's/^.*Adresse://g' -e 's/<br.*$//g' -e 's/^.*>//g' |
+$sed -e 's/$/, Wien, Österreich/g'

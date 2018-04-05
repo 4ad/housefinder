@@ -1,0 +1,26 @@
+#!/bin/sh
+
+# srcdir is the directory where this script resides
+srcdir="$(cd `dirname "$0"` && pwd)"
+progname="`basename "$0"`"
+. ${srcdir}/env.sh
+
+cd $resultdir
+
+c=0
+for file in `echo *.htm`
+do
+	index=`echo $file | $awk ' BEGIN { FS="." } { print $1 } '`
+	site=`echo $file | $awk ' BEGIN { FS="." } { print $2 } '`
+
+	printf "\r${progname}: extracting price ${index}." > /dev/tty
+
+	if [ ! -f $index.$site.price ]
+	then
+		${srcdir}/${site}.getprice < $file > $index.$site.price
+		c=$((c+1))
+	fi
+done
+du *.price | awk ' $1 == 0 { print $2 } ' | $xargs rm
+echo > /dev/tty
+echo "${progname}: `ls *.price | wc -l` valid prices." > /dev/tty
